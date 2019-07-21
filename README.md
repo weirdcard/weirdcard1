@@ -4,6 +4,7 @@
 
 
 ソースコード：
+
 IplImage* createVideoAverageImage(CvCapture* capture) {
     CvSize frameSize;
     int depth = 0;
@@ -124,13 +125,22 @@ int main(int argc, char* argv[])
 }
 
 
+
 参考URL
+
 http://bicycle.life.coocan.jp/takamints/index.php/doc/opencv/doc/createVideoAverageImage
+
 https://iwaki2009.blogspot.com/2012/10/opencvcvmat.html
+
 https://qiita.com/hausen6/items/b1b54f7325745ae43e47
 
 
+
 処理の説明
+
 ・matplotlibという関数を用いてリアルタイムにグラフをプロットしている
+
 ・画像の輝度値の平均を求める場合、各要素にアクセスし、輝度値の合計を求め、画素数でわれば輝度値の平均を求める。cv::reduceを使用。
+
 ・ピクセルごとの全フレームの総和を出力し、その輝度の平均を取得している。それをグラフにプロットしていく。
+
