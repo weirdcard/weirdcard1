@@ -1,3 +1,136 @@
 # weirdcard1
 
-first contact
+「レポート」
+
+
+ソースコード：
+IplImage* createVideoAverageImage(CvCapture* capture) {
+    CvSize frameSize;
+    int depth = 0;
+    int channels = 0;
+    CV_REDUCE_SUM;
+    CV_REDUCE_AVG;
+    CV_REDUCE_MAX;
+    CV_REDUCE_MIN;
+
+ 
+    frameSize.width = (int)cvGetCaptureProperty(
+        capture, CV_CAP_PROP_FRAME_WIDTH);
+    frameSize.height = (int)cvGetCaptureProperty(
+        capture, CV_CAP_PROP_FRAME_HEIGHT);
+    int frame_count = (int)cvGetCaptureProperty(
+        capture, CV_CAP_PROP_FRAME_COUNT);
+     
+    ImageDataPtr sumPtr;
+    ImageDataPtr imgPtr;
+    IplImage* sum = 0;
+ 
+    IplImage* captured_frame = cvQueryFrame(capture);
+    if(captured_frame != 0) {
+        depth = captured_frame->depth;
+        channels = captured_frame->nChannels;
+        sum = cvCreateImage(
+            frameSize, IPL_DEPTH_32F, channels);
+        sumPtr = sum;
+    }
+ 
+    while(captured_frame != 0) {
+        imgPtr = captured_frame;
+        for(int y = 0; y < frameSize.height; y++) {
+            sumPtr.setLine(y);
+            imgPtr.setLine(y);
+            for(int x = 0; x < frameSize.width; x++) {
+                for(int c = 0; c < channels; c++) {
+                    sumPtr = sumPtr + imgPtr;
+                    sumPtr++;
+                    imgPtr++;
+                }
+            }
+        }
+        captured_frame = cvQueryFrame(capture);
+    }
+ 
+    IplImage* avg = cvCreateImage(frameSize, depth, channels);
+    sumPtr = sum;
+    imgPtr = avg;
+    for(int y = 0; y < frameSize.height; y++) {
+        sumPtr.setLine(y);
+        imgPtr.setLine(y);
+        for(int x = 0; x < frameSize.width; x++) {
+            for(int c = 0; c < channels; c++) {
+                imgPtr = sumPtr / frame_count;
+                sumPtr++;
+                imgPtr++;
+            }
+        }
+    }
+    cvReleaseImage(&sum);
+    return avg;
+}
+
+from __future__ import unicode_literals, print_function
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def pause_plot():
+    fig, ax = plt.subplots(1, 1)
+    x = np.arange(-np.pi, np.pi, 0.1)
+    y = np.sin(x)
+    lines, = ax.plot(x, y)
+
+    while True:
+        # plotデータの更新
+        x += 0.1
+        y = np.sin(x)
+
+        lines.set_data(x, y)
+        ax.set_xlim((x.min(), x.max()))
+
+   
+        plt.pause(interval)
+        plt.pause(.01)
+
+if __name__ == "__main__":
+    pause_plot()
+
+void reduce(InputArray src, OutputArray dst, int dim, int rtype, int dtype=-1 )
+
+#include "opencv/cv.h"
+#include "opencv/highgui.h"
+using namespace cv;
+int main(int argc, char* argv[])
+{
+    if(argc < 2) {
+        exit(-1);
+    }
+    cvInitSystem(argc, argv);
+    CvCapture* capture = cvCreateFileCapture(argv[1]);
+     
+    IplImage* image_average = createVideoAverageImage(capture);
+     
+    cvNamedWindow("Average Image", CV_WINDOW_AUTOSIZE);
+    cvShowImage("Average Image", image_average);
+    cvWaitKey(0);
+    Mat img1 = Mat::zeros(500, 500, CV_8UC1);
+
+ 
+    cvDestroyAllWindows();
+    cvReleaseImage(&image_average);
+    cvReleaseCapture(&capture);
+ 
+    return 0;
+}
+
+
+参考URL
+http://bicycle.life.coocan.jp/takamints/index.php/doc/opencv/doc/createVideoAverageImage
+https://iwaki2009.blogspot.com/2012/10/opencvcvmat.html
+https://qiita.com/hausen6/items/b1b54f7325745ae43e47
+
+
+処理の説明
+・matplotlibという関数を用いてリアルタイムにグラフをプロットしている
+・画像の輝度値の平均を求める場合、各要素にアクセスし、輝度値の合計を求め、画素数でわれば輝度値の平均を求める。cv::reduceを使用。
+・ピクセルごとの全フレームの総和を出力し、その輝度の平均を取得している。それをグラフにプロットしていく。
